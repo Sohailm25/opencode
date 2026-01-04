@@ -12,6 +12,8 @@ import { SystemPrompt } from "./system"
 import { ToolRegistry } from "@/tool/registry"
 import { Flag } from "@/flag/flag"
 
+import PROMPT_RLM from "./prompt/rlm.txt"
+
 export namespace LLM {
   const log = Log.create({ service: "llm" })
 
@@ -28,6 +30,7 @@ export namespace LLM {
     small?: boolean
     tools: Record<string, Tool>
     retries?: number
+    rlmMode?: boolean
   }
 
   export type StreamOutput = StreamTextResult<ToolSet, unknown>
@@ -75,6 +78,15 @@ export namespace LLM {
 
     const provider = await Provider.getProvider(input.model.providerID)
 
+    // Determine RLM mode: use input, fall back to config, then to experimental flag
+    const rlmMode = input.rlmMode ?? cfg.experimental?.rlm_mode ?? Flag.OPENCODE_EXPERIMENTAL_RLM
+
+    // Add RLM mode prompt if enabled
+    if (rlmMode) {
+      l.info("RLM mode enabled")
+      system.push(PROMPT_RLM)
+    }
+
     const params = await Plugin.trigger(
       "chat.params",
       {
@@ -92,7 +104,7 @@ export namespace LLM {
         topK: ProviderTransform.topK(input.model),
         options: pipe(
           {},
-          mergeDeep(ProviderTransform.options(input.model, input.sessionID, provider.options)),
+          mergeDeep(ProviderTransform.options(input.model, input.sessionID, provider.options, rlmMode)),
           input.small ? mergeDeep(ProviderTransform.smallOptions(input.model)) : mergeDeep({}),
           mergeDeep(input.model.options),
           mergeDeep(input.agent.options),

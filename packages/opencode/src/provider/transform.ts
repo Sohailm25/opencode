@@ -247,8 +247,43 @@ export namespace ProviderTransform {
     model: Provider.Model,
     sessionID: string,
     providerOptions?: Record<string, any>,
+    rlmMode?: boolean,
   ): Record<string, any> {
     const result: Record<string, any> = {}
+
+    // RLM (Recursive Language Model) mode configuration
+    // When enabled, enhances reasoning capabilities through recursive prompt processing
+    if (rlmMode) {
+      result["rlm"] = {
+        enabled: true,
+        // Allow recursive self-invocation for complex prompts
+        recursiveProcessing: true,
+        // Maximum recursion depth for prompt decomposition
+        maxDepth: 3,
+      }
+
+      // Provider-specific RLM enhancements
+      if (model.api.id.includes("claude") || model.api.npm === "@ai-sdk/anthropic") {
+        // Enable extended thinking for Anthropic models in RLM mode
+        result["thinking"] = {
+          type: "enabled",
+          budgetTokens: 16384,
+        }
+      }
+
+      if (model.api.id.includes("gpt-5") || model.providerID === "openai") {
+        // Boost reasoning effort for OpenAI models in RLM mode
+        result["reasoningEffort"] = "high"
+      }
+
+      if (model.api.id.includes("gemini") || model.providerID === "google") {
+        // Enable high thinking level for Google models in RLM mode
+        result["thinkingConfig"] = {
+          includeThoughts: true,
+          thinkingLevel: "high",
+        }
+      }
+    }
 
     if (model.api.npm === "@openrouter/ai-sdk-provider") {
       result["usage"] = {

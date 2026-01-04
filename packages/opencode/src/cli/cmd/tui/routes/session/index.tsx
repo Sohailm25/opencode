@@ -90,6 +90,7 @@ const context = createContext<{
   showDetails: () => boolean
   userMessageMarkdown: () => boolean
   diffWrapMode: () => "word" | "none"
+  rlmMode: () => boolean
   sync: ReturnType<typeof useSync>
 }>()
 
@@ -128,6 +129,7 @@ export function Session() {
   const [showScrollbar, setShowScrollbar] = createSignal(kv.get("scrollbar_visible", false))
   const [userMessageMarkdown, setUserMessageMarkdown] = createSignal(kv.get("user_message_markdown", true))
   const [diffWrapMode, setDiffWrapMode] = createSignal<"word" | "none">("word")
+  const [rlmMode, setRlmMode] = createSignal(kv.get("rlm_mode", sync.data.config.experimental?.rlm_mode ?? false))
 
   const wide = createMemo(() => dimensions().width > 120)
   const sidebarVisible = createMemo(() => {
@@ -531,6 +533,19 @@ export function Session() {
         setShowThinking((prev) => {
           const next = !prev
           kv.set("thinking_visibility", next)
+          return next
+        })
+        dialog.clear()
+      },
+    },
+    {
+      title: rlmMode() ? "Disable RLM mode" : "Enable RLM mode",
+      value: "session.toggle.rlm",
+      category: "Session",
+      onSelect: (dialog) => {
+        setRlmMode((prev) => {
+          const next = !prev
+          kv.set("rlm_mode", next)
           return next
         })
         dialog.clear()
@@ -956,6 +971,7 @@ export function Session() {
         showDetails,
         userMessageMarkdown,
         diffWrapMode,
+        rlmMode,
         sync,
       }}
     >
