@@ -814,6 +814,12 @@ export namespace Config {
             .optional()
             .describe("Tools that should only be available to primary agents."),
           continue_loop_on_deny: z.boolean().optional().describe("Continue the agent loop when a tool call is denied"),
+          rlm_mode: z
+            .boolean()
+            .optional()
+            .describe(
+              "Enable RLM (Recursive Language Model) mode for enhanced reasoning. When enabled, models can recursively process and decompose complex prompts for improved inference.",
+            ),
         })
         .optional(),
     })

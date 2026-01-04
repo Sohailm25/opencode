@@ -5,11 +5,13 @@ import { useDirectory } from "../../context/directory"
 import { useConnected } from "../../component/dialog-model"
 import { createStore } from "solid-js/store"
 import { useRoute } from "../../context/route"
+import { useKV } from "../../context/kv"
 
 export function Footer() {
   const { theme } = useTheme()
   const sync = useSync()
   const route = useRoute()
+  const kv = useKV()
   const mcp = createMemo(() => Object.values(sync.data.mcp).filter((x) => x.status === "connected").length)
   const mcpError = createMemo(() => Object.values(sync.data.mcp).some((x) => x.status === "failed"))
   const lsp = createMemo(() => Object.keys(sync.data.lsp))
@@ -17,6 +19,7 @@ export function Footer() {
     if (route.data.type !== "session") return []
     return sync.data.permission[route.data.sessionID] ?? []
   })
+  const rlmMode = createMemo(() => kv.get("rlm_mode", sync.data.config.experimental?.rlm_mode ?? false))
   const directory = useDirectory()
   const connected = useConnected()
 
@@ -77,6 +80,12 @@ export function Footer() {
                   </Match>
                 </Switch>
                 {mcp()} MCP
+              </text>
+            </Show>
+            <Show when={rlmMode()}>
+              <text fg={theme.text}>
+                <span style={{ fg: theme.accent }}>◈ </span>
+                RLM
               </text>
             </Show>
             <text fg={theme.textMuted}>/status</text>
